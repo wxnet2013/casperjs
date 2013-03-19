@@ -116,6 +116,7 @@ var Casper = function Casper(options) {
             userAgent:                     defaultUserAgent
         },
         remoteScripts:       [],
+        runStepOnDomLoaded:  true, // XXX: false
         stepTimeout:         null,
         timeout:             null,
         verbose:             false,
@@ -129,6 +130,7 @@ var Casper = function Casper(options) {
     this.options.logLevel = this.cli.get('log-level') || this.options.logLevel;
     this.options.verbose = this.cli.get('direct') || this.options.verbose;
     this.colorizer = this.getColorizer();
+    this.domLoaded = false;
     this.mouse = mouse.create(this);
     this.popups = pagestack.create();
     // properties
@@ -171,7 +173,6 @@ var Casper = function Casper(options) {
         return this._test;
     });
 
-    // init phantomjs error handler
     this.initErrorHandler();
 
     this.on('error', function(msg, backtrace) {
@@ -357,7 +358,8 @@ Casper.prototype.captureSelector = function captureSelector(targetFile, selector
  */
 Casper.prototype.checkStep = function checkStep(self, onComplete) {
     "use strict";
-    if (self.pendingWait || self.loadInProgress || self.navigationRequested) {
+    var loading = self.options.runStepOnDomLoaded ? !self.domLoaded : self.loadInProgress;
+    if (loading || self.pendingWait || self.navigationRequested) {
         return;
     }
     var step = self.steps[self.step++];
@@ -1551,7 +1553,8 @@ Casper.prototype.start = function start(location, then) {
 Casper.prototype.status = function status(asString) {
     "use strict";
     var properties = ['currentHTTPStatus', 'loadInProgress', 'navigationRequested',
-                      'options', 'pendingWait', 'requestUrl', 'started', 'step', 'url'];
+                      'options', 'pendingWait', 'requestUrl', 'started', 'step', 'url',
+                      'domLoaded'];
     var currentStatus = {};
     properties.forEach(function(property) {
         currentStatus[property] = this[property];
@@ -2213,7 +2216,14 @@ function createPage(casper) {
     };
 
     page.onCallback = function onCallback(data){
-        casper.emit('remote.callback',data);
+        casper.emit('remote.callback', data);
+        if (!utils.isObject(data)) {
+            return;
+        }
+        if (data.event === 'DOMContentLoaded') {
+            console.log('ok');
+            casper.domLoaded = true;
+        }
     };
 
     page.onError = function onError(msg, trace) {
@@ -2225,15 +2235,16 @@ function createPage(casper) {
             casper.log("Post-configuring WebPage instance", "debug");
             casper.options.onPageInitialized.call(casper, page);
         }
-        // local client scripts
-        casper.injectClientScripts();
-        // Client-side utils injection
-        casper.injectClientUtils();
-        // history
-        casper.history.push(casper.getCurrentUrl());
+        // DOMContentLoaded event
+        page.evaluate(function() {
+            document.addEventListener('DOMContentLoaded', function() {
+                window.callPhantom({event: 'DOMContentLoaded'});
+            }, false);
+        });
     };
     page.onLoadStarted = function onLoadStarted() {
         casper.loadInProgress = true;
+        casper.domLoaded = false;
         casper.emit('load.started');
     };
     page.onLoadFinished = function onLoadFinished(status) {
@@ -2255,8 +2266,14 @@ function createPage(casper) {
                 casper.options.onLoadError.call(casper, casper, casper.requestUrl, status);
             }
         }
+        // local client scripts
+        casper.injectClientScripts();
         // remote client scripts
         casper.includeRemoteScripts();
+        // Client-side utils injection
+        casper.injectClientUtils();
+        // history
+        casper.history.push(casper.getCurrentUrl());
         casper.emit('load.finished', status);
         casper.loadInProgress = false;
     };
