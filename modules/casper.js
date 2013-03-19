@@ -2225,6 +2225,12 @@ function createPage(casper) {
             casper.log("Post-configuring WebPage instance", "debug");
             casper.options.onPageInitialized.call(casper, page);
         }
+        // local client scripts
+        casper.injectClientScripts();
+        // Client-side utils injection
+        casper.injectClientUtils();
+        // history
+        casper.history.push(casper.getCurrentUrl());
     };
     page.onLoadStarted = function onLoadStarted() {
         casper.loadInProgress = true;
@@ -2249,14 +2255,8 @@ function createPage(casper) {
                 casper.options.onLoadError.call(casper, casper, casper.requestUrl, status);
             }
         }
-        // local client scripts
-        casper.injectClientScripts();
         // remote client scripts
         casper.includeRemoteScripts();
-        // Client-side utils injection
-        casper.injectClientUtils();
-        // history
-        casper.history.push(casper.getCurrentUrl());
         casper.emit('load.finished', status);
         casper.loadInProgress = false;
     };
