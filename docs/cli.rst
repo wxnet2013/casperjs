@@ -96,11 +96,16 @@ The `casperjs` command has three available options:
 - ``--engine=[phantomjs|slimerjs]`` to select the browser engine you want to use. CasperJS
    supports PhantomJS (default) that runs Webkit, and SlimerJS that runs Gecko.
 
+.. warning::
+
+   .. deprecated:: 1.1
+   ``--direct`` option has been renamed to ``--verbose``, though ``--direct`` will still works, while is to be considered deprecated.
+   
 Example:
 
 .. code-block:: text
 
-    $ casperjs --direct --log-level=debug myscript.js
+    $ casperjs --verbose --log-level=debug myscript.js
 
 Last but not least, you can still use all PhantomJS standard CLI options as you would do with any other phantomjs script:
 

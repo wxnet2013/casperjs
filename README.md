@@ -40,6 +40,8 @@ Follow the CasperJS project [on twitter](https://twitter.com/casperjs_org) and [
 
 ## Show me some code!
 
+First [install CasperJS](http://docs.casperjs.org/en/latest/installation.html), we'll use 1.1 beta here.
+
 Sample test to see if some dropdown can be opened:
 
 ```javascript
@@ -62,10 +64,11 @@ Run the script:
 
 ##Support
 
-If you're having problems with using the project, use the support forum at CodersClan.
+Need help with getting CasperJS up and running? Got a time-consuming problem you want to get solved quickly? 
 
-<a href="http://codersclan.net/forum/index.php?repo_id=32"><img src="http://www.codersclan.net/graphics/getSupport_blue_big.png" width="160"></a>
+Get <a href="http://codersclan.net/?repo_id=32">CasperJS support on CodersClan.</a>
 
+<a href="http://codersclan.net/?repo_id=32"><img src="http://www.codersclan.net/gs_button/?repo_id=32" width="200"></a>
 ## Contributing
 
 ### Contributing code
@@ -77,3 +80,15 @@ Please read the [CONTRIBUTING.md](https://github.com/n1k0/casperjs/blob/master/C
 CasperJS's documentation is written using the [Markdown format](http://daringfireball.net/projects/markdown/), and hosted on Github thanks to the [Github Pages Feature](http://pages.github.com/).
 
 To view the source files on github, head to [the gh-pages branch](https://github.com/n1k0/casperjs/tree/gh-pages), and check the [documentation's README](https://github.com/n1k0/casperjs/tree/gh-pages#readme) for further instructions.
+
+## Team
+
+- Nicolas Perriault ([@n1k0](https://github.com/n1k0))
+- Nick Currier ([@hexid](https://github.com/hexid))
+- Laurent Jouanneau ([@laurentj](https://github.com/laurentj))
+- Mickaël Andrieu ([@mickaelandrieu](https://github.com/mickaelandrieu))
+- Matt DuVall ([@mduvall](https://github.com/mduvall))
+
+## License
+
+MIT

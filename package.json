@@ -6,15 +6,16 @@
     "phantomjs",
     "javascript"
   ],
+  "bin": "./bin/casperjs",
   "maintainers": [
     {
       "name": "Nicolas Perriault",
       "email": "nperriault@gmail.com",
-      "web": "http://www.akei.com"
+      "web": "https://nicolas.perriault.net/"
     }
   ],
   "dependencies": {
-    "http://www.phantomjs.org/": "master"
+    "phantomjs": "~1.9.1"
   },
   "bugs": {
     "url": "https://github.com/n1k0/casperjs/issues"

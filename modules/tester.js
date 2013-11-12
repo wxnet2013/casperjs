@@ -164,15 +164,6 @@ var Tester = function Tester(casper, options) {
         }
     });
 
-    // casper events
-    this.casper.on('error', function onCasperError(msg, backtrace) {
-        self.processPhantomError(msg, backtrace);
-    });
-
-    this.casper.on('waitFor.timeout', function onWaitForTimeout(timeout) {
-        this.warn(f('wait timeout of %dms reached', timeout));
-    });
-
     function errorHandler(error, backtrace) {
         self.casper.unwait();
         if (error instanceof Error) {
@@ -190,11 +181,16 @@ var Tester = function Tester(casper, options) {
         } catch (e) {}
         self.uncaughtError(error, self.currentTestFile, line, backtrace);
     }
-    
+
     function errorHandlerAndDone(error, backtrace) {
         errorHandler(error, backtrace);
         self.done();
     }
+
+    // casper events
+    this.casper.on('error', function onCasperError(msg, backtrace) {
+        self.processPhantomError(msg, backtrace);
+    });
 
     [
         'wait.error',
@@ -227,8 +223,34 @@ var Tester = function Tester(casper, options) {
         throw new TimedOutError(f("Timeout occured (%dms)", timeout));
     };
 
-    this.casper.options.onWaitTimeout = function test_onWaitTimeout(timeout) {
-        throw new TimedOutError(f("Wait timeout occured (%dms)", timeout));
+    this.casper.options.onWaitTimeout = function test_onWaitTimeout(timeout, details) {
+        /*jshint maxcomplexity:10*/
+        var message = f("Wait timeout occured (%dms)", timeout);
+        details = details || {};
+
+        if (details.selector) {
+            message = f(details.waitWhile ? '"%s" never went away in %dms' : '"%s" still did not exist in %dms', details.selector, timeout);
+        }
+        else if (details.visible) {
+            message = f(details.waitWhile ? '"%s" never disappeared in %dms' : '"%s" never appeared in %dms', details.visible, timeout);
+        }
+        else if (details.url || details.resource) {
+            message = f('%s did not load in %dms', details.url || details.resource, timeout);
+        }
+        else if (details.popup) {
+            message = f('%s did not pop up in %dms', details.popup, timeout);
+        }
+        else if (details.text) {
+            message = f('"%s" did not appear in the page in %dms', details.text, timeout);
+        }
+        else if (details.selectorTextChange) {
+            message = f('"%s" did not have a text change in %dms', details.selectorTextChange, timeout);
+        }
+        else if (utils.isFunction(details.testFx)) {
+            message = f('"%s" did not evaluate to something truthy in %dms', details.testFx.toString(), timeout);
+        }
+
+        errorHandlerAndDone(new TimedOutError(message));
     };
 };
 
@@ -488,7 +510,7 @@ Tester.prototype.assertSelectorExist = function assertExists(selector, message) 
     "use strict";
     return this.assert(this.casper.exists(selector), message, {
         type: "assertExists",
-        standard: f("Found an element matching: %s", selector),
+        standard: f("Find an element matching: %s", selector),
         values: {
             selector: selector
         }
@@ -508,7 +530,7 @@ Tester.prototype.assertNotExists = function assertDoesntExist(selector, message)
     "use strict";
     return this.assert(!this.casper.exists(selector), message, {
         type: "assertDoesntExist",
-        standard: f("No element found matching selector: %s", selector),
+        standard: f("Fail to find element matching selector: %s", selector),
         values: {
             selector: selector
         }
@@ -638,7 +660,7 @@ Tester.prototype.assertResourceExist = function assertResourceExists(test, messa
     "use strict";
     return this.assert(this.casper.resourceExists(test), message, {
         type: "assertResourceExists",
-        standard: "Expected resource has been found",
+        standard: "Confirm page has resource",
         values: {
             test: test
         }
@@ -682,7 +704,7 @@ Tester.prototype.assertTextExist = function assertTextExists(text, message) {
     }).indexOf(text) !== -1);
     return this.assert(textFound, message, {
         type: "assertTextExists",
-        standard: "Found expected text within the document body",
+        standard: "Find text within the document body",
         values: {
             text: text
         }
@@ -742,7 +764,7 @@ Tester.prototype.assertSelectorContains = function assertSelectorHasText(selecto
     var textFound = got.indexOf(text) !== -1;
     return this.assert(textFound, message, {
         type: "assertSelectorHasText",
-        standard: f('Found "%s" within the selector "%s"', text, selector),
+        standard: f('Find "%s" within the selector "%s"', text, selector),
         values: {
             selector: selector,
             text: text,
@@ -835,6 +857,29 @@ Tester.prototype.assertType = function assertType(subject, type, message) {
             subject: subject,
             type: type,
             actual: actual
+        }
+    });
+};
+
+/**
+ * Asserts that the provided subject has the provided constructor in its prototype hierarchy.
+ *
+ * @param  mixed   subject       The value to test
+ * @param  Function constructor  The javascript type name
+ * @param  String  message       Test description
+ * @return Object                An assertion result object
+ */
+Tester.prototype.assertInstanceOf = function assertInstanceOf(subject, constructor, message) {
+    "use strict";
+    if (utils.betterTypeOf(constructor) !== "function") {
+        throw new CasperError('Subject is null or undefined.');
+    }
+    return this.assert(utils.betterInstanceOf(subject, constructor), message, {
+        type: "assertInstanceOf",
+        standard: f('Subject is instance of: "%s"', constructor.name),
+        values: {
+            subject: subject,
+            constructorName: constructor.name
         }
     });
 };
@@ -1335,7 +1380,7 @@ Tester.prototype.processError = function processError(error) {
 Tester.prototype.processPhantomError = function processPhantomError(msg, backtrace) {
     "use strict";
     if (/^AssertionError/.test(msg)) {
-        this.casper.warn('looks you did not use begin() which is mandatory since 1.1');
+        this.casper.warn('looks like you did not use begin(), which is mandatory since 1.1');
     }
     var termination = /^TerminationError:?\s?(.*)/.exec(msg);
     if (termination) {

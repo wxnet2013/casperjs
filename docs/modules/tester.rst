@@ -445,6 +445,29 @@ Asserts that the provided input is of the given type::
 
 .. note:: Type names are always expressed in lower case.
 
+.. index:: InstanceOf
+
+``assertInstanceOf()``
+-------------------------------------------------------------------------------
+
+**Signature:** ``assertInstanceOf(mixed input, Function constructor[, String message])``
+
+.. versionadded:: 1.1
+
+Asserts that the provided input is of the given constructor::
+    
+    function Cow() {
+        this.moo = function moo() {
+            return 'moo!';
+        };
+    } 
+    casper.test.begin('assertInstanceOf() tests', 2, function suite(test) {
+        var daisy = new Cow();
+        test.assertInstanceOf(daisy, Cow, "Ok, daisy is a cow.");
+        test.assertInstanceOf(["moo", "boo"], Array, "We can test for arrays too!");
+        test.done();
+    });
+
 .. index:: URL
 
 ``assertUrlMatch()``

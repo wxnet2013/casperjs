@@ -181,6 +181,11 @@ Sample custom command:
                     --fail-fast \
                     test1.js test2.js /path/to/some/test/dir
 
+.. warning::
+
+   .. deprecated:: 1.1
+   ``--direct`` option has been renamed to ``--verbose``, though ``--direct`` will still works, while is to be considered deprecated.
+
 .. hint::
 
    A `demo gist <https://gist.github.com/3813361>`_ is also available in order to get you started with a sample suite involving some of these options.
